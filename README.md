@@ -1,4 +1,4 @@
-# Twinn 🤝
+# Twinn
 
 Finde deine zwei Bros. Name eingeben, Interessen anhaken, durchswipen — wie Tinder, nur für Kumpels.
 

@@ -10,7 +10,7 @@
 <div class="app-shell">
 
     <header class="brand">
-        <span class="brand-mark">🤝</span>
+        <span class="brand-mark">T</span>
         <span class="brand-name">TWINN</span>
     </header>
 
@@ -58,7 +58,7 @@
                     var bro = _deck[_deckIndex];
                     var shared = Engine.SharedInterestCount(bro, _selectedInterests);
                     <div class="card bro-card" @key="bro.Id">
-                        <div class="bro-avatar">@bro.Avatar</div>
+                        <div class="bro-avatar">@Initial(bro.Name)</div>
                         <h2>@bro.Name, @bro.Age</h2>
                         <p class="tagline">"@bro.Tagline"</p>
                         <div class="chip-grid small">
@@ -69,11 +69,11 @@
                         </div>
                         @if (shared > 0)
                         {
-                            <p class="match-hint">🔥 @shared gemeinsame Interessen</p>
+                            <p class="match-hint">@shared gemeinsame Interessen</p>
                         }
                         <div class="swipe-actions">
                             <button class="btn-swipe nope" @onclick="Skip">✕</button>
-                            <button class="btn-swipe yep" @onclick="Accept">🤝</button>
+                            <button class="btn-swipe yep" @onclick="Accept">✓</button>
                         </div>
                     </div>
                 }
@@ -90,17 +90,17 @@
 
         case Step.Matched:
             <section class="matched-zone">
-                <h1 class="match-title">ES HAT<br />GEMATCHT! 🎉</h1>
+                <h1 class="match-title">ES HAT<br />GEMATCHT!</h1>
                 <p class="sub">@_userName, das sind deine zwei neuen Bros:</p>
 
                 <div class="match-cards">
                     @foreach (var bro in _matches)
                     {
                         <div class="card match-card">
-                            <div class="bro-avatar">@bro.Avatar</div>
+                            <div class="bro-avatar">@Initial(bro.Name)</div>
                             <h2>@bro.Name, @bro.Age</h2>
                             <p class="tagline">"@bro.Tagline"</p>
-                            <p class="contact">📩 @bro.Contact</p>
+                            <p class="contact">Kontakt: @bro.Contact</p>
                         </div>
                     }
                 </div>
@@ -122,6 +122,8 @@
     private List<BroProfile> _deck = [];
     private int _deckIndex;
     private readonly List<BroProfile> _matches = [];
+
+    private static string Initial(string name) => name.Length > 0 ? name[..1].ToUpperInvariant() : "?";
 
     private void ToggleInterest(string interest)
     {
