@@ -1,0 +1,188 @@
+@page "/"
+@using Twinn.Web.Data
+@using Twinn.Web.Models
+@using Twinn.Web.Services
+@inject MatchEngine Engine
+@rendermode InteractiveServer
+
+<PageTitle>Twinn — find deine Bros</PageTitle>
+
+<div class="app-shell">
+
+    <header class="brand">
+        <span class="brand-mark">🤝</span>
+        <span class="brand-name">TWINN</span>
+    </header>
+
+    @switch (_step)
+    {
+        case Step.Onboarding:
+            <section class="card onboarding">
+                <h1>FIND DEINE<br />ZWEI BROS.</h1>
+                <p class="sub">Name rein, Interessen anhaken, swipen. Fertig ist die Bruderschaft.</p>
+
+                <label class="field-label" for="nameInput">Dein Name</label>
+                <input id="nameInput" class="text-input" placeholder="z.B. Enis" maxlength="24"
+                       @bind="_userName" @bind:event="oninput" />
+
+                <label class="field-label">Womit ballerst du deine Zeit tot?</label>
+                <div class="chip-grid">
+                    @foreach (var interest in BroCatalog.Interests)
+                    {
+                        <button type="button"
+                                class="chip @(_selectedInterests.Contains(interest) ? "chip-active" : "")"
+                                @onclick="() => ToggleInterest(interest)">
+                            @interest
+                        </button>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <p class="error">@_error</p>
+                }
+
+                <button class="btn-primary" @onclick="StartSwiping">BROS FINDEN →</button>
+            </section>
+            break;
+
+        case Step.Swiping:
+            <section class="swipe-zone">
+                <div class="progress-row">
+                    <span>@_matches.Count / 2 Bros gefunden</span>
+                    <span class="deck-count">@(_deck.Count - _deckIndex) übrig</span>
+                </div>
+
+                @if (_deckIndex < _deck.Count)
+                {
+                    var bro = _deck[_deckIndex];
+                    var shared = Engine.SharedInterestCount(bro, _selectedInterests);
+                    <div class="card bro-card" @key="bro.Id">
+                        <div class="bro-avatar">@bro.Avatar</div>
+                        <h2>@bro.Name, @bro.Age</h2>
+                        <p class="tagline">"@bro.Tagline"</p>
+                        <div class="chip-grid small">
+                            @foreach (var interest in bro.Interests)
+                            {
+                                <span class="chip static @(_selectedInterests.Contains(interest) ? "chip-shared" : "")">@interest</span>
+                            }
+                        </div>
+                        @if (shared > 0)
+                        {
+                            <p class="match-hint">🔥 @shared gemeinsame Interessen</p>
+                        }
+                        <div class="swipe-actions">
+                            <button class="btn-swipe nope" @onclick="Skip">✕</button>
+                            <button class="btn-swipe yep" @onclick="Accept">🤝</button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card empty-deck">
+                        <h2>KEINE BROS MEHR ÜBRIG.</h2>
+                        <p>Du hast @_matches.Count von 2 gefunden. Nochmal von vorn?</p>
+                        <button class="btn-primary" @onclick="ResetDeck">DECK NEU MISCHEN</button>
+                    </div>
+                }
+            </section>
+            break;
+
+        case Step.Matched:
+            <section class="matched-zone">
+                <h1 class="match-title">ES HAT<br />GEMATCHT! 🎉</h1>
+                <p class="sub">@_userName, das sind deine zwei neuen Bros:</p>
+
+                <div class="match-cards">
+                    @foreach (var bro in _matches)
+                    {
+                        <div class="card match-card">
+                            <div class="bro-avatar">@bro.Avatar</div>
+                            <h2>@bro.Name, @bro.Age</h2>
+                            <p class="tagline">"@bro.Tagline"</p>
+                            <p class="contact">📩 @bro.Contact</p>
+                        </div>
+                    }
+                </div>
+
+                <button class="btn-primary" @onclick="RestartAll">NOCHMAL VON VORN</button>
+            </section>
+            break;
+    }
+</div>
+
+@code {
+    private enum Step { Onboarding, Swiping, Matched }
+
+    private Step _step = Step.Onboarding;
+    private string _userName = string.Empty;
+    private readonly HashSet<string> _selectedInterests = [];
+    private string? _error;
+
+    private List<BroProfile> _deck = [];
+    private int _deckIndex;
+    private readonly List<BroProfile> _matches = [];
+
+    private void ToggleInterest(string interest)
+    {
+        if (!_selectedInterests.Remove(interest))
+        {
+            _selectedInterests.Add(interest);
+        }
+    }
+
+    private void StartSwiping()
+    {
+        if (string.IsNullOrWhiteSpace(_userName))
+        {
+            _error = "Gib erstmal deinen Namen ein.";
+            return;
+        }
+        if (_selectedInterests.Count == 0)
+        {
+            _error = "Wähl mindestens ein Interesse aus.";
+            return;
+        }
+
+        _error = null;
+        _deck = Engine.BuildDeck(_userName, _selectedInterests, BroCatalog.All);
+        _deckIndex = 0;
+        _matches.Clear();
+        _step = Step.Swiping;
+    }
+
+    private void Skip() => Advance();
+
+    private void Accept()
+    {
+        _matches.Add(_deck[_deckIndex]);
+        if (_matches.Count >= 2)
+        {
+            _step = Step.Matched;
+            return;
+        }
+        Advance();
+    }
+
+    private void Advance()
+    {
+        _deckIndex++;
+    }
+
+    private void ResetDeck()
+    {
+        _deck = Engine.BuildDeck(_userName, _selectedInterests, BroCatalog.All);
+        _deckIndex = 0;
+    }
+
+    private void RestartAll()
+    {
+        _userName = string.Empty;
+        _selectedInterests.Clear();
+        _deck = [];
+        _deckIndex = 0;
+        _matches.Clear();
+        _error = null;
+        _step = Step.Onboarding;
+    }
+}
