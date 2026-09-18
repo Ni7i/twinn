@@ -4,7 +4,7 @@ Finde deine zwei Bros. Name eingeben, Interessen anhaken, durchswipen — wie Ti
 
 ## Stack
 
-- .NET 8, ASP.NET Core Blazor Server (C#, interactive server rendering)
+- .NET 10, ASP.NET Core Blazor Server (C#, interactive server rendering)
 - Kein externes UI-Framework — eigenes, handgeschriebenes CSS (neobrutalistischer Look: dicke Borders, harte Schatten, kein Gradient-Kitsch)
 
 ## Wie es funktioniert
@@ -17,12 +17,14 @@ Die Matching-Logik steckt in [`MatchEngine`](src/Twinn.Web/Services/MatchEngine.
 
 ## Lokal starten
 
+Voraussetzung: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Version ist über `global.json` festgelegt).
+
 ```bash
 cd src/Twinn.Web
 dotnet run
 ```
 
-Dann im Browser: `http://localhost:5289` (Port steht in der Konsolenausgabe).
+Dann im Browser: `http://localhost:5107` (Port steht in der Konsolenausgabe).
 
 ## Projektstruktur
 
